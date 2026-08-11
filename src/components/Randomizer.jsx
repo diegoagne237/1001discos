@@ -1,0 +1,122 @@
+import { useState } from 'react'
+import { albums } from '../data/albums'
+
+const DECADES = [...new Set(albums.map((a) => a.decade))].sort()
+const GENRES = [...new Set(albums.map((a) => a.genre))].sort()
+
+export default function Randomizer({ isListened, onToggle }) {
+  const [decadeFilter, setDecadeFilter] = useState('all')
+  const [genreFilter, setGenreFilter] = useState('all')
+  const [onlyUnheard, setOnlyUnheard] = useState(false)
+  const [result, setResult] = useState(null)
+  const [spinning, setSpinning] = useState(false)
+
+  const sortear = () => {
+    const pool = albums.filter((a) => {
+      if (decadeFilter !== 'all' && a.decade !== decadeFilter) return false
+      if (genreFilter !== 'all' && a.genre !== genreFilter) return false
+      if (onlyUnheard && isListened(a.id)) return false
+      return true
+    })
+
+    if (pool.length === 0) {
+      setResult(null)
+      return
+    }
+
+    setSpinning(true)
+    setTimeout(() => {
+      const pick = pool[Math.floor(Math.random() * pool.length)]
+      setResult(pick)
+      setSpinning(false)
+    }, 400)
+  }
+
+  return (
+    <section className="bg-petrol text-paper rounded-sm p-6 md:p-8">
+      <p className="font-mono text-mustard text-xs tracking-[0.2em] uppercase mb-1">Sem ideia do que ouvir?</p>
+      <h2 className="font-display text-3xl uppercase mb-6">Sorteador de disco</h2>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
+        <select
+          value={decadeFilter}
+          onChange={(e) => setDecadeFilter(e.target.value)}
+          className="bg-paper text-ink font-mono text-sm px-3 py-2 rounded-sm border border-paper/20"
+        >
+          <option value="all">Qualquer década</option>
+          {DECADES.map((d) => (
+            <option key={d} value={d}>{d}</option>
+          ))}
+        </select>
+
+        <select
+          value={genreFilter}
+          onChange={(e) => setGenreFilter(e.target.value)}
+          className="bg-paper text-ink font-mono text-sm px-3 py-2 rounded-sm border border-paper/20"
+        >
+          <option value="all">Qualquer gênero</option>
+          {GENRES.map((g) => (
+            <option key={g} value={g}>{g}</option>
+          ))}
+        </select>
+
+        <label className="flex items-center gap-2 font-mono text-sm px-3 py-2 bg-paper/10 rounded-sm border border-paper/20 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={onlyUnheard}
+            onChange={(e) => setOnlyUnheard(e.target.checked)}
+            className="accent-mustard"
+          />
+          Só não ouvidos
+        </label>
+      </div>
+
+      <button
+        onClick={sortear}
+        className="font-display uppercase tracking-wide bg-mustard text-ink px-6 py-3 rounded-sm hover:bg-mustard-dark transition-colors"
+      >
+        Sortear disco
+      </button>
+
+      {spinning && (
+        <p className="font-mono text-sm text-paper/60 mt-6 animate-pulse">Girando o crate...</p>
+      )}
+
+      {!spinning && result && (
+        <div className="mt-6 bg-paper text-ink rounded-sm p-5 flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="w-20 h-20 bg-ink rounded-sm flex items-center justify-center shrink-0">
+            <span className="font-display text-paper/80 text-[10px] text-center uppercase px-1 leading-tight">
+              {result.title}
+            </span>
+          </div>
+          <div className="flex-1">
+            <p className="font-display text-xl uppercase leading-tight">{result.title}</p>
+            <p className="font-body text-sm text-ink/70">{result.artist} · {result.year}</p>
+          </div>
+          <div className="flex gap-2 shrink-0">
+            <a
+              href={result.spotifyUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="font-mono text-xs uppercase px-3 py-2 rounded-sm bg-petrol text-paper hover:bg-petrol-dark"
+            >
+              Spotify
+            </a>
+            <button
+              onClick={() => onToggle(result.id)}
+              className="font-mono text-xs uppercase px-3 py-2 rounded-sm border border-ink/30 hover:border-ink"
+            >
+              {isListened(result.id) ? 'Desmarcar' : 'Marcar ouvido'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!spinning && result === null && (
+        <p className="font-mono text-sm text-paper/50 mt-6">
+          Nenhum disco encontrado com esses filtros — tenta afrouxar um pouco.
+        </p>
+      )}
+    </section>
+  )
+}
