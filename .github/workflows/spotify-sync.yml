@@ -49,4 +49,4 @@ jobs:
           if [ "${{ github.event.inputs.retry_failed }}" = "true" ]; then
             ARGS="$ARGS --retry-failed"
           fi
-          node
+          node scripts/sync-spotify.mjs $ARGS
