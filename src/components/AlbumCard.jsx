@@ -1,6 +1,26 @@
-export default function AlbumCard({ album, isListened, onToggle }) {
+function StarRating({ rating, onRate }) {
+  return (
+    <div className="flex items-center gap-0.5" role="radiogroup" aria-label="Avaliação">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <button
+          key={n}
+          type="button"
+          onClick={() => onRate(n)}
+          aria-label={`${n} estrela${n > 1 ? 's' : ''}`}
+          className={`text-sm leading-none transition-colors ${
+            n <= rating ? 'text-mustard' : 'text-ink/20 hover:text-mustard/50'
+          }`}
+        >
+          ★
+        </button>
+      ))}
+    </div>
+  )
+}
+
+export default function AlbumCard({ album, isListened, onToggle, rating = 0, onRate }) {
   const heard = isListened(album.id)
-  const isResolvedLink = album.spotifyUrl && !album.spotifyUrl.includes('/search/')
+  const hasSpotifyLink = Boolean(album.spotifyUrl)
 
   return (
     <div
@@ -48,15 +68,26 @@ export default function AlbumCard({ album, isListened, onToggle }) {
         )}
       </div>
 
+      {heard && onRate && (
+        <div className="flex items-center justify-between">
+          <span className="font-mono text-[10px] uppercase text-ink/40">Sua nota</span>
+          <StarRating rating={rating} onRate={(n) => onRate(album.id, n)} />
+        </div>
+      )}
+
       <div className="flex items-center justify-between gap-2 pt-2 border-t border-ink/10">
-        <a
-          href={album.spotifyUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="font-mono text-[11px] uppercase tracking-wide text-petrol hover:text-petrol-dark underline decoration-petrol/30 underline-offset-2"
-        >
-          {isResolvedLink ? 'Ouvir no Spotify' : 'Buscar no Spotify'}
-        </a>
+        {hasSpotifyLink ? (
+          <a
+            href={album.spotifyUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="font-mono text-[11px] uppercase tracking-wide text-petrol hover:text-petrol-dark underline decoration-petrol/30 underline-offset-2"
+          >
+            Ouvir no Spotify
+          </a>
+        ) : (
+          <span className="font-mono text-[11px] uppercase tracking-wide text-ink/30">Sem link ainda</span>
+        )}
         <button
           onClick={() => onToggle(album.id)}
           className={`font-mono text-[11px] uppercase tracking-wide px-2.5 py-1 rounded-sm border transition-colors
