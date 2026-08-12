@@ -83,7 +83,7 @@ export default function App() {
         <Randomizer albums={albums} isListened={isListened} onToggle={toggle} />
 
         <div className="flex flex-col gap-14">
-          {decadeGroups.map(([decade, decadeAlbums]) => (
+          {decadeGroups.map(([decade, decadeAlbums], index) => (
             <DecadeSection
               key={decade}
               decade={decade}
@@ -92,6 +92,7 @@ export default function App() {
               onToggle={toggle}
               getRating={getRating}
               onRate={setRating}
+              defaultOpen={index === 0}
             />
           ))}
         </div>
