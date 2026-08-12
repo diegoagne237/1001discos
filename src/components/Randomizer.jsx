@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { albums } from '../data/albums'
 
 const DECADES = [...new Set(albums.map((a) => a.decade))].sort()
-const GENRES = [...new Set(albums.map((a) => a.genre))].sort()
+const GENRES = [...new Set(albums.map((a) => a.genre).filter(Boolean))].sort()
 
 export default function Randomizer({ isListened, onToggle }) {
   const [decadeFilter, setDecadeFilter] = useState('all')

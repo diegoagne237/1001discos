@@ -1,12 +1,15 @@
 import { useMemo } from 'react'
 import { albums } from './data/albums'
+import { useAuth } from './hooks/useAuth'
 import { useListened } from './hooks/useListened'
+import Auth from './components/Auth'
 import DashboardStats from './components/DashboardStats'
 import DecadeSection from './components/DecadeSection'
 import Randomizer from './components/Randomizer'
 
 export default function App() {
-  const { listenedIds, toggle, isListened } = useListened()
+  const { user, loading: authLoading, signOut } = useAuth()
+  const { listenedIds, toggle, isListened } = useListened(user?.id)
 
   const decadeGroups = useMemo(() => {
     const groups = {}
@@ -17,27 +20,48 @@ export default function App() {
     return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b))
   }, [])
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="font-mono text-sm text-ink/50 uppercase tracking-wide">Carregando...</p>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return <Auth />
+  }
+
   return (
     <div className="min-h-screen">
       <header className="border-b-4 border-ink bg-paper sticky top-0 z-20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
           <div>
             <p className="font-mono text-[10px] tracking-[0.25em] uppercase text-burgundy">1001 discos</p>
             <h1 className="font-display text-xl sm:text-2xl uppercase leading-none">
               Para se ouvir antes de morrer
             </h1>
           </div>
-          <nav className="hidden md:flex gap-1 font-mono text-xs">
-            {decadeGroups.map(([decade]) => (
-              <a
-                key={decade}
-                href={`#${decade}`}
-                className="px-2 py-1 text-ink/60 hover:text-burgundy transition-colors"
-              >
-                {decade}
-              </a>
-            ))}
-          </nav>
+          <div className="flex items-center gap-4">
+            <nav className="hidden md:flex gap-1 font-mono text-xs">
+              {decadeGroups.map(([decade]) => (
+                <a
+                  key={decade}
+                  href={`#${decade}`}
+                  className="px-2 py-1 text-ink/60 hover:text-burgundy transition-colors"
+                >
+                  {decade}
+                </a>
+              ))}
+            </nav>
+            <button
+              onClick={signOut}
+              className="font-mono text-[11px] uppercase text-ink/50 hover:text-burgundy shrink-0"
+              title={user.email}
+            >
+              Sair
+            </button>
+          </div>
         </div>
       </header>
 

@@ -1,5 +1,6 @@
 export default function AlbumCard({ album, isListened, onToggle }) {
   const heard = isListened(album.id)
+  const isResolvedLink = album.spotifyUrl && !album.spotifyUrl.includes('/search/')
 
   return (
     <div
@@ -29,8 +30,12 @@ export default function AlbumCard({ album, isListened, onToggle }) {
         <p className="font-body text-sm text-ink/70">{album.artist}</p>
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2 font-mono text-[11px] text-ink/50">
           <span>{album.year}</span>
-          <span className="text-mustard-dark">·</span>
-          <span>{album.genre}</span>
+          {album.genre && (
+            <>
+              <span className="text-mustard-dark">·</span>
+              <span>{album.genre}</span>
+            </>
+          )}
           {album.country && (
             <>
               <span className="text-mustard-dark">·</span>
@@ -50,7 +55,7 @@ export default function AlbumCard({ album, isListened, onToggle }) {
           rel="noreferrer"
           className="font-mono text-[11px] uppercase tracking-wide text-petrol hover:text-petrol-dark underline decoration-petrol/30 underline-offset-2"
         >
-          Ouvir no Spotify
+          {isResolvedLink ? 'Ouvir no Spotify' : 'Buscar no Spotify'}
         </a>
         <button
           onClick={() => onToggle(album.id)}
