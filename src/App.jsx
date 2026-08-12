@@ -9,6 +9,7 @@ import DashboardStats from './components/DashboardStats'
 import DecadeSection from './components/DecadeSection'
 import Randomizer from './components/Randomizer'
 import SyncSpotify from './components/SyncSpotify'
+import SyncCovers from './components/SyncCovers'
 import Lab from './components/Lab'
 import BackToTop from './components/BackToTop'
 import AlbumModal from './components/AlbumModal'
@@ -39,6 +40,8 @@ export default function App() {
 
   // /?sync=1 abre a página de sincronização com o Spotify (roda no navegador, veja SyncSpotify.jsx)
   const isSyncPage = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('sync')
+  // /?covers=1 abre a sincronização de capas via iTunes (não precisa de login nem chave)
+  const isCoversPage = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('covers')
   // /?lab=1 abre a área escondida, liberada só pra quem está na tabela allowed_users
   const isLabPage = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('lab')
 
@@ -100,6 +103,10 @@ export default function App() {
       )
     }
     return <SyncSpotify />
+  }
+
+  if (isCoversPage) {
+    return <SyncCovers />
   }
 
   if (isLabPage) {
