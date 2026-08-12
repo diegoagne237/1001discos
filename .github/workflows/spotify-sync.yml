@@ -1,0 +1,52 @@
+name: Sincronizar dados do Spotify
+
+# Roda só quando você clicar em "Run workflow" na aba Actions do GitHub.
+# Não roda sozinho, não tem custo, não precisa de nada instalado no seu computador.
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "Processar só os N primeiros discos ainda não resolvidos (deixe vazio pra processar todos os 1001)"
+        required: false
+        default: ""
+      retry_failed:
+        description: "Tentar de novo os discos que não foram encontrados em execuções anteriores"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: spotify-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Instalar dependências
+        run: npm install
+
+      - name: Rodar a sincronização com o Spotify
+        env:
+          SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
+          SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
+        run: |
+          ARGS=""
+          if [ -n "${{ github.event.inputs.limit }}" ]; then
+            ARGS="$ARGS --limit=${{ github.event.inputs.limit }}"
+          fi
+          if [ "${{ github.event.inputs.retry_failed }}" = "true" ]; then
+            ARGS="$ARGS --retry-failed"
+          fi
+          node
