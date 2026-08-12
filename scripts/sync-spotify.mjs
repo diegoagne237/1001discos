@@ -94,10 +94,17 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+const MAX_RETRY_WAIT_SECONDS = 30 // acima disso, não vale a pena esperar dentro da mesma execução
+
 async function spotifyFetch(url, token, attempt = 1) {
   const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } })
   if (res.status === 429) {
     const retryAfter = parseInt(res.headers.get('Retry-After') || '2', 10)
+    if (retryAfter > MAX_RETRY_WAIT_SECONDS) {
+      // bloqueio longo (às vezes a Spotify aplica isso pra tráfego vindo de IPs compartilhados,
+      // como os runners do GitHub Actions) — não compensa esperar dentro do mesmo job.
+      throw new Error(`RATE_LIMIT_LONG:${retryAfter}`)
+    }
     console.log(`  rate limit, esperando ${retryAfter}s...`)
     await sleep((retryAfter + 1) * 1000)
     return spotifyFetch(url, token, attempt)
@@ -177,6 +184,7 @@ async function main() {
   let processed = 0
   let resolved = 0
   let notFound = 0
+  let stoppedEarly = false
 
   for (const album of albums) {
     // já resolvido no próprio albums.js (persiste entre execuções via git, sem depender do cache local)
@@ -195,6 +203,7 @@ async function main() {
       const match = await searchAlbum(album.artist, album.title, token)
       if (!match) {
         console.log('não encontrado')
+        album.spotifyUrl = ''
         cache[album.id] = { status: 'not_found' }
         notFound++
         continue
@@ -220,6 +229,14 @@ async function main() {
         processed--
         continue
       }
+      if (err.message.startsWith('RATE_LIMIT_LONG:')) {
+        const waitSeconds = err.message.split(':')[1]
+        console.log(`\nBloqueio longo da Spotify (pediram ${waitSeconds}s de espera).`)
+        console.log('Parando por aqui e salvando o progresso — roda o workflow de novo daqui a um tempo pra continuar.')
+        processed--
+        stoppedEarly = true
+        break
+      }
       console.log(`erro: ${err.message}`)
       cache[album.id] = { status: 'error', message: err.message }
     }
@@ -228,8 +245,8 @@ async function main() {
     cache.__artistGenres = artistGenreCache
     saveCache(cache)
 
-    // respeito básico ao rate limit da Spotify
-    await sleep(120)
+    // respeito básico ao rate limit da Spotify — mais espaçado pra reduzir chance de bloqueio longo
+    await sleep(350)
   }
 
   // reaplica tudo que já estava resolvido em execuções anteriores (mesmo além do --limit)
@@ -250,8 +267,11 @@ async function main() {
   console.log(`resolvidos agora: ${resolved}`)
   console.log(`não encontrados agora: ${notFound}`)
   console.log(`total já resolvido no dataset: ${totalResolved}/${albums.length}`)
-  if (totalResolved < albums.length) {
-    console.log('\nRode `npm run spotify:sync` de novo para continuar de onde parou.')
+  if (stoppedEarly) {
+    console.log('\nParou por causa de um bloqueio longo da Spotify. Espera um pouco (10-15 min costuma bastar)')
+    console.log('e roda o workflow de novo — ele continua exatamente de onde parou.')
+  } else if (totalResolved < albums.length) {
+    console.log('\nRode o workflow de novo para continuar de onde parou.')
   }
 }
 
