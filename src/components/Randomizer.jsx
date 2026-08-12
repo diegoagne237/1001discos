@@ -1,10 +1,11 @@
-import { useState } from 'react'
-import { albums } from '../data/albums'
+import { useMemo, useState } from 'react'
 
-const DECADES = [...new Set(albums.map((a) => a.decade))].sort()
-const GENRES = [...new Set(albums.map((a) => a.genre).filter(Boolean))].sort()
-
-export default function Randomizer({ isListened, onToggle }) {
+export default function Randomizer({ albums, isListened, onToggle }) {
+  const DECADES = useMemo(() => [...new Set(albums.map((a) => a.decade))].sort(), [albums])
+  const GENRES = useMemo(
+    () => [...new Set(albums.map((a) => a.genre).filter(Boolean))].sort(),
+    [albums]
+  )
   const [decadeFilter, setDecadeFilter] = useState('all')
   const [genreFilter, setGenreFilter] = useState('all')
   const [onlyUnheard, setOnlyUnheard] = useState(false)
@@ -94,14 +95,16 @@ export default function Randomizer({ isListened, onToggle }) {
             <p className="font-body text-sm text-ink/70">{result.artist} · {result.year}</p>
           </div>
           <div className="flex gap-2 shrink-0">
-            <a
-              href={result.spotifyUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="font-mono text-xs uppercase px-3 py-2 rounded-sm bg-petrol text-paper hover:bg-petrol-dark"
-            >
-              Spotify
-            </a>
+            {result.spotifyUrl && (
+              <a
+                href={result.spotifyUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="font-mono text-xs uppercase px-3 py-2 rounded-sm bg-petrol text-paper hover:bg-petrol-dark"
+              >
+                Spotify
+              </a>
+            )}
             <button
               onClick={() => onToggle(result.id)}
               className="font-mono text-xs uppercase px-3 py-2 rounded-sm border border-ink/30 hover:border-ink"
