@@ -179,11 +179,12 @@ async function main() {
   let notFound = 0
 
   for (const album of albums) {
+    // já resolvido no próprio albums.js (persiste entre execuções via git, sem depender do cache local)
+    const alreadyResolvedInFile = album.coverUrl && album.spotifyUrl && !album.spotifyUrl.includes('/search/')
     const cached = cache[album.id]
-    const alreadyResolved = cached?.status === 'resolved'
     const alreadyFailed = cached?.status === 'not_found'
 
-    if (alreadyResolved) continue
+    if (alreadyResolvedInFile) continue
     if (alreadyFailed && !RETRY_FAILED) continue
     if (processed >= LIMIT) break
 
