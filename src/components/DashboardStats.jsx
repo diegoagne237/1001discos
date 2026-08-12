@@ -1,8 +1,8 @@
-import { albums } from '../data/albums'
+import { albums as staticAlbums } from '../data/albums'
 
 const DECADES_ORDER = ['1950s', '1960s', '1970s', '1980s', '1990s', '2000s', '2010s', '2020s']
 
-export default function DashboardStats({ listenedIds }) {
+export default function DashboardStats({ listenedIds, albums = staticAlbums, onShare }) {
   const total = albums.length
   const listened = albums.filter((a) => listenedIds.has(a.id)).length
   const pct = total ? Math.round((listened / total) * 100) : 0
@@ -30,13 +30,21 @@ export default function DashboardStats({ listenedIds }) {
           </p>
         </div>
 
-        <div className="w-full md:w-auto md:min-w-[320px]">
+        <div className="w-full md:w-auto md:min-w-[320px] flex flex-col items-stretch gap-3">
           <div className="h-2 bg-paper/15 rounded-full overflow-hidden mb-1">
             <div
               className="h-full bg-burgundy-light transition-all duration-700"
               style={{ width: `${pct}%` }}
             />
           </div>
+          {onShare && (
+            <button
+              onClick={onShare}
+              className="font-mono text-[11px] uppercase tracking-wide px-3 py-2 rounded-sm border border-paper/25 text-paper/80 hover:border-mustard hover:text-mustard transition-colors self-start md:self-auto"
+            >
+              Compartilhar progresso
+            </button>
+          )}
         </div>
       </div>
 

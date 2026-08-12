@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { albums as staticAlbums } from './data/albums'
 import { useAuth } from './hooks/useAuth'
 import { useListened } from './hooks/useListened'
@@ -8,11 +8,30 @@ import DashboardStats from './components/DashboardStats'
 import DecadeSection from './components/DecadeSection'
 import Randomizer from './components/Randomizer'
 import SyncSpotify from './components/SyncSpotify'
+import BackToTop from './components/BackToTop'
+import AlbumModal from './components/AlbumModal'
+import Onboarding, { hasSeenOnboarding } from './components/Onboarding'
+import ShareProgress from './components/ShareProgress'
 
 export default function App() {
   const { user, loading: authLoading, signOut } = useAuth()
-  const { listenedIds, toggle, isListened, getRating, setRating } = useListened(user?.id)
+  const {
+    listenedIds,
+    toggle,
+    isListened,
+    getRating,
+    setRating,
+    favorites,
+    isFavorite,
+    setFavorite,
+    getComment,
+    setComment,
+  } = useListened(user?.id)
   const { metadata } = useAlbumMetadata()
+
+  const [selectedAlbum, setSelectedAlbum] = useState(null)
+  const [showOnboarding, setShowOnboarding] = useState(() => user && !hasSeenOnboarding())
+  const [showShare, setShowShare] = useState(false)
 
   // /?sync=1 abre a página de sincronização com o Spotify (roda no navegador, veja SyncSpotify.jsx)
   const isSyncPage = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('sync')
@@ -67,6 +86,13 @@ export default function App() {
               ))}
             </nav>
             <button
+              onClick={() => setShowOnboarding(true)}
+              aria-label="Como funciona"
+              className="w-6 h-6 rounded-full border border-ink/30 text-ink/50 hover:border-burgundy hover:text-burgundy text-xs font-mono flex items-center justify-center shrink-0"
+            >
+              ?
+            </button>
+            <button
               onClick={signOut}
               className="font-mono text-[11px] uppercase text-ink/50 hover:text-burgundy shrink-0"
               title={user.email}
@@ -78,7 +104,11 @@ export default function App() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 flex flex-col gap-12">
-        <DashboardStats listenedIds={listenedIds} />
+        <DashboardStats
+          listenedIds={listenedIds}
+          albums={albums}
+          onShare={() => setShowShare(true)}
+        />
 
         <Randomizer albums={albums} isListened={isListened} onToggle={toggle} />
 
@@ -92,6 +122,8 @@ export default function App() {
               onToggle={toggle}
               getRating={getRating}
               onRate={setRating}
+              isFavorite={isFavorite}
+              onOpenAlbum={setSelectedAlbum}
               defaultOpen={index === 0}
             />
           ))}
@@ -103,6 +135,34 @@ export default function App() {
           Baseado em "1001 Albums You Must Hear Before You Die", org. Robert Dimery
         </div>
       </footer>
+
+      <BackToTop />
+
+      {selectedAlbum && (
+        <AlbumModal
+          album={selectedAlbum}
+          onClose={() => setSelectedAlbum(null)}
+          isListened={isListened}
+          onToggle={toggle}
+          rating={getRating(selectedAlbum.id)}
+          onRate={setRating}
+          favorite={isFavorite(selectedAlbum.id)}
+          onFavorite={setFavorite}
+          comment={getComment(selectedAlbum.id)}
+          onSaveComment={setComment}
+        />
+      )}
+
+      {showOnboarding && <Onboarding onClose={() => setShowOnboarding(false)} />}
+
+      {showShare && (
+        <ShareProgress
+          albums={albums}
+          listenedIds={listenedIds}
+          favorites={favorites}
+          onClose={() => setShowShare(false)}
+        />
+      )}
     </div>
   )
 }

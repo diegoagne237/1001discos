@@ -1,24 +1,6 @@
-function StarRating({ rating, onRate }) {
-  return (
-    <div className="flex items-center gap-0.5" role="radiogroup" aria-label="Avaliação">
-      {[1, 2, 3, 4, 5].map((n) => (
-        <button
-          key={n}
-          type="button"
-          onClick={() => onRate(n)}
-          aria-label={`${n} estrela${n > 1 ? 's' : ''}`}
-          className={`text-sm leading-none transition-colors ${
-            n <= rating ? 'text-mustard' : 'text-ink/20 hover:text-mustard/50'
-          }`}
-        >
-          ★
-        </button>
-      ))}
-    </div>
-  )
-}
+import StarRating from './StarRating'
 
-export default function AlbumCard({ album, isListened, onToggle, rating = 0, onRate }) {
+export default function AlbumCard({ album, isListened, onToggle, rating = 0, onRate, favorite = false, onOpen }) {
   const heard = isListened(album.id)
   const hasSpotifyLink = Boolean(album.spotifyUrl)
 
@@ -29,11 +11,15 @@ export default function AlbumCard({ album, isListened, onToggle, rating = 0, onR
     >
       {heard && (
         <div className="stamp absolute -top-2 -right-2 bg-burgundy text-paper text-[10px] font-display uppercase tracking-wider px-2 py-1 rounded-sm shadow-md z-10">
-          Ouvido
+          {favorite ? '♥ Favorito' : 'Ouvido'}
         </div>
       )}
 
-      <div className="aspect-square w-full bg-ink/90 rounded-sm overflow-hidden flex items-center justify-center relative">
+      <button
+        onClick={() => onOpen(album)}
+        className="aspect-square w-full bg-ink/90 rounded-sm overflow-hidden flex items-center justify-center relative cursor-zoom-in"
+        aria-label={`Ver detalhes de ${album.title}`}
+      >
         {album.coverUrl ? (
           <img src={album.coverUrl} alt={`Capa de ${album.title}`} className="w-full h-full object-cover" />
         ) : (
@@ -43,9 +29,9 @@ export default function AlbumCard({ album, isListened, onToggle, rating = 0, onR
             </p>
           </div>
         )}
-      </div>
+      </button>
 
-      <div className="flex-1">
+      <button onClick={() => onOpen(album)} className="flex-1 text-left">
         <p className="font-display text-lg leading-tight uppercase">{album.title}</p>
         <p className="font-body text-sm text-ink/70">{album.artist}</p>
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2 font-mono text-[11px] text-ink/50">
@@ -66,7 +52,7 @@ export default function AlbumCard({ album, isListened, onToggle, rating = 0, onR
         {album.blurb && (
           <p className="font-body text-xs text-ink/60 mt-2 leading-relaxed">{album.blurb}</p>
         )}
-      </div>
+      </button>
 
       {heard && onRate && (
         <div className="flex items-center justify-between">

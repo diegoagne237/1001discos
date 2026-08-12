@@ -17,6 +17,8 @@ export default function DecadeSection({
   onToggle,
   getRating,
   onRate,
+  isFavorite,
+  onOpenAlbum,
   defaultOpen = false,
 }) {
   const [open, setOpen] = useState(
@@ -97,6 +99,8 @@ export default function DecadeSection({
                     onToggle={onToggle}
                     rating={getRating ? getRating(album.id) : 0}
                     onRate={onRate}
+                    favorite={isFavorite ? isFavorite(album.id) : false}
+                    onOpen={onOpenAlbum}
                   />
                 ))}
               </div>
