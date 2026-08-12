@@ -59,7 +59,12 @@ export default function SyncSpotify() {
       if (error) throw error
 
       const resolvedIds = new Set((existing || []).filter((r) => r.cover_url).map((r) => r.album_id))
-      const pending = albums.filter((a) => !resolvedIds.has(a.id))
+      // pula também os que já foram resolvidos antes (ex. pelo GitHub Actions) e já estão no albums.js
+      const pending = albums.filter((a) => {
+        if (resolvedIds.has(a.id)) return false
+        const alreadyResolvedStatically = a.coverUrl && a.spotifyUrl && !a.spotifyUrl.includes('/search/')
+        return !alreadyResolvedStatically
+      })
 
       setProgress({ done: 0, total: pending.length, resolved: 0, notFound: 0 })
       appendLog(`${pending.length} discos ainda por resolver (de ${albums.length} no total).`)
@@ -122,7 +127,7 @@ export default function SyncSpotify() {
         }
 
         setProgress({ done: i + 1, total: pending.length, resolved: resolvedCount, notFound: notFoundCount })
-        await new Promise((r) => setTimeout(r, 150))
+        await new Promise((r) => setTimeout(r, 400))
       }
 
       if (!stopRef.current) appendLog('Concluído!')
