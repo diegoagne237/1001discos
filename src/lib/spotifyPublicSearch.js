@@ -47,6 +47,31 @@ export async function searchThisIsPlaylist(artistName) {
   return exact || items[0] || null
 }
 
+export function extractPlaylistId(url) {
+  const match = url.match(/playlist[/:]([a-zA-Z0-9]+)/)
+  return match ? match[1] : null
+}
+
+// Busca direta por ID é bem mais leve que "search" — menos chance de esbarrar em rate limit.
+export async function getPlaylist(playlistId) {
+  const token = await getSpotifyToken()
+  const res = await fetch(
+    `https://api.spotify.com/v1/playlists/${playlistId}?fields=name,images,owner,tracks.items(track(artists,name))`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  )
+  if (!res.ok) throw new Error(`Spotify respondeu ${res.status} ao buscar a playlist`)
+  return res.json()
+}
+
+export async function getArtist(artistId) {
+  const token = await getSpotifyToken()
+  const res = await fetch(`https://api.spotify.com/v1/artists/${artistId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!res.ok) throw new Error(`Spotify respondeu ${res.status} ao buscar o artista`)
+  return res.json()
+}
+
 async function fetchWikipediaSummaryFromLang(name, lang) {
   try {
     const res = await fetch(`https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(name)}`)
