@@ -1,11 +1,32 @@
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { toPng } from 'html-to-image'
 
 const DECADES_ORDER = ['1950s', '1960s', '1970s', '1980s', '1990s', '2000s', '2010s', '2020s']
 
+// posições do "leque" de capas — mesma referência visual do mockup aprovado
+const COVER_SLOTS = [
+  { left: '4%', bottom: '14px', size: 76, rotate: -14, z: 3 },
+  { left: '21%', bottom: '38px', size: 76, rotate: 9, z: 4 },
+  { left: '38%', bottom: '8px', size: 76, rotate: -7, z: 5 },
+  { left: '55%', bottom: '32px', size: 76, rotate: 13, z: 4 },
+  { left: '72%', bottom: '4px', size: 76, rotate: -11, z: 3 },
+  { left: '-6%', bottom: '54px', size: 62, rotate: 17, z: 2 },
+  { left: '87%', bottom: '46px', size: 62, rotate: -19, z: 2 },
+]
+
+function shuffle(arr) {
+  const copy = [...arr]
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[copy[i], copy[j]] = [copy[j], copy[i]]
+  }
+  return copy
+}
+
 export default function ShareProgress({ albums, listenedIds, favorites, onClose }) {
   const cardRef = useRef(null)
   const [downloading, setDownloading] = useState(false)
+  const [shuffleSeed, setShuffleSeed] = useState(0)
 
   const total = albums.length
   const listened = albums.filter((a) => listenedIds.has(a.id)).length
@@ -19,6 +40,17 @@ export default function ShareProgress({ albums, listenedIds, favorites, onClose 
   }).filter((d) => d.total > 0)
 
   const topDecade = [...byDecade].sort((a, b) => b.heard - a.heard)[0]
+
+  const coverPool = useMemo(
+    () => albums.filter((a) => listenedIds.has(a.id) && a.coverUrl),
+    [albums, listenedIds]
+  )
+
+  const randomCovers = useMemo(
+    () => shuffle(coverPool).slice(0, 7),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [coverPool, shuffleSeed]
+  )
 
   const handleDownload = async () => {
     if (!cardRef.current) return
@@ -53,7 +85,6 @@ export default function ShareProgress({ albums, listenedIds, favorites, onClose 
           style={{ aspectRatio: '4 / 5' }}
         >
           <div className="absolute -right-10 -top-10 w-48 h-48 rounded-full border-4 border-mustard/20" />
-          <div className="absolute -left-8 -bottom-8 w-32 h-32 rounded-full border-4 border-burgundy/20" />
 
           <p className="font-mono text-mustard text-[10px] tracking-[0.25em] uppercase mb-1">1001 discos</p>
           <p className="font-display text-sm uppercase text-paper/70 mb-8">
@@ -68,7 +99,7 @@ export default function ShareProgress({ albums, listenedIds, favorites, onClose 
           </div>
           <p className="font-mono text-xs text-paper/60 mb-8">{pct}% da lista completa</p>
 
-          <div className="flex gap-6">
+          <div className="flex gap-6 relative z-10">
             {topDecade && (
               <div>
                 <p className="font-display text-2xl">{topDecade.heard}</p>
@@ -81,18 +112,62 @@ export default function ShareProgress({ albums, listenedIds, favorites, onClose 
             </div>
           </div>
 
-          <p className="absolute bottom-6 left-8 right-8 font-mono text-[9px] text-paper/30 uppercase tracking-wide">
+          {/* leque de capas dos discos já ouvidos */}
+          {randomCovers.length > 0 && (
+            <div className="absolute inset-x-0 bottom-0 h-40 pointer-events-none">
+              {randomCovers.map((album, i) => {
+                const slot = COVER_SLOTS[i]
+                return (
+                  <img
+                    key={album.id}
+                    src={album.coverUrl}
+                    alt=""
+                    crossOrigin="anonymous"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none'
+                    }}
+                    className="absolute rounded-sm shadow-none object-cover"
+                    style={{
+                      left: slot.left,
+                      bottom: slot.bottom,
+                      width: slot.size,
+                      height: slot.size,
+                      transform: `rotate(${slot.rotate}deg)`,
+                      zIndex: slot.z,
+                    }}
+                  />
+                )
+              })}
+              <div
+                className="absolute inset-0"
+                style={{ background: 'linear-gradient(to top, #1B1710 0%, rgba(27,23,16,0) 60%)' }}
+              />
+            </div>
+          )}
+
+          <p className="absolute bottom-6 left-8 right-8 font-mono text-[9px] text-paper/30 uppercase tracking-wide z-10">
             baseado em "1001 Albums You Must Hear Before You Die"
           </p>
         </div>
 
-        <button
-          onClick={handleDownload}
-          disabled={downloading}
-          className="w-full mt-4 font-display uppercase tracking-wide bg-burgundy text-paper py-2.5 rounded-sm hover:bg-burgundy-dark transition-colors disabled:opacity-50"
-        >
-          {downloading ? 'Gerando imagem...' : 'Baixar imagem'}
-        </button>
+        <div className="flex gap-2 mt-4">
+          {randomCovers.length > 0 && (
+            <button
+              onClick={() => setShuffleSeed((s) => s + 1)}
+              title="Trocar as capas mostradas"
+              className="font-mono text-xs uppercase px-4 py-2.5 rounded-sm border border-ink/20 text-ink/60 hover:border-ink hover:text-ink transition-colors shrink-0"
+            >
+              🔀
+            </button>
+          )}
+          <button
+            onClick={handleDownload}
+            disabled={downloading}
+            className="flex-1 font-display uppercase tracking-wide bg-burgundy text-paper py-2.5 rounded-sm hover:bg-burgundy-dark transition-colors disabled:opacity-50"
+          >
+            {downloading ? 'Gerando imagem...' : 'Baixar imagem'}
+          </button>
+        </div>
       </div>
     </div>
   )
