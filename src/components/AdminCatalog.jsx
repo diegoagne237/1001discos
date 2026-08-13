@@ -23,6 +23,8 @@ function AdminAlbumRow({ album, onSave }) {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
+  const isDataUri = coverUrl.trim().startsWith('data:')
+
   const handleSave = async () => {
     setSaving(true)
     setSaved(false)
@@ -43,7 +45,8 @@ function AdminAlbumRow({ album, onSave }) {
   }
 
   return (
-    <div className="bg-paperDark border border-ink/10 rounded-sm p-3 flex flex-col sm:flex-row sm:items-center gap-3">
+    <div className="bg-paperDark border border-ink/10 rounded-sm p-3 flex flex-col gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
       <div className="w-14 h-14 bg-ink/10 rounded-sm shrink-0 overflow-hidden flex items-center justify-center">
         {coverUrl ? (
           <img
@@ -86,7 +89,9 @@ function AdminAlbumRow({ album, onSave }) {
         placeholder="Link da capa"
         value={coverUrl}
         onChange={(e) => setCoverUrl(e.target.value)}
-        className="flex-1 min-w-0 bg-paper border border-ink/20 rounded-sm px-2 py-1.5 font-mono text-[11px] focus:outline-none focus:border-burgundy"
+        className={`flex-1 min-w-0 bg-paper border rounded-sm px-2 py-1.5 font-mono text-[11px] focus:outline-none ${
+          isDataUri ? 'border-burgundy' : 'border-ink/20 focus:border-burgundy'
+        }`}
       />
       <input
         type="url"
@@ -105,11 +110,19 @@ function AdminAlbumRow({ album, onSave }) {
 
       <button
         onClick={handleSave}
-        disabled={saving}
+        disabled={saving || isDataUri}
+        title={isDataUri ? 'Esse link parece ser uma prévia temporária do Google, não vai funcionar' : undefined}
         className="shrink-0 font-mono text-[10px] uppercase px-3 py-1.5 rounded-sm bg-burgundy text-paper disabled:opacity-30"
       >
         {saving ? '...' : saved ? 'Salvo ✓' : 'Salvar'}
       </button>
+      </div>
+      {isDataUri && (
+        <p className="font-mono text-[10px] text-burgundy">
+          Esse link é uma prévia temporária do Google (não é um link de imagem de verdade). Abre a
+          imagem em tamanho grande primeiro e copia o endereço de lá.
+        </p>
+      )}
     </div>
   )
 }
@@ -156,9 +169,39 @@ export default function AdminCatalog() {
       <div className="max-w-5xl mx-auto">
         <p className="font-mono text-[10px] tracking-[0.25em] uppercase text-burgundy mb-1">1001 discos</p>
         <h1 className="font-display text-2xl uppercase mb-1">Gerenciar catálogo</h1>
-        <p className="font-body text-sm text-ink/60 mb-6">
+        <p className="font-body text-sm text-ink/60 mb-4">
           {counts.cover} sem capa · {counts.link} sem link · {counts.genre} sem gênero
         </p>
+
+        <div className="flex flex-wrap gap-2 mb-6 pb-6 border-b border-ink/10">
+          <a href="/?admin=1" className="font-mono text-[11px] uppercase px-3 py-1.5 rounded-sm bg-ink text-paper">
+            Gerenciar catálogo
+          </a>
+          <a
+            href="/?sync=1"
+            className="font-mono text-[11px] uppercase px-3 py-1.5 rounded-sm border border-ink/25 text-ink/60 hover:border-ink hover:text-ink"
+          >
+            Sincronizar Spotify
+          </a>
+          <a
+            href="/?covers=1"
+            className="font-mono text-[11px] uppercase px-3 py-1.5 rounded-sm border border-ink/25 text-ink/60 hover:border-ink hover:text-ink"
+          >
+            Sincronizar capas (iTunes)
+          </a>
+          <a
+            href="/?covers-edit=1"
+            className="font-mono text-[11px] uppercase px-3 py-1.5 rounded-sm border border-ink/25 text-ink/60 hover:border-ink hover:text-ink"
+          >
+            Editor manual de capas
+          </a>
+          <a
+            href="/?lab=1"
+            className="font-mono text-[11px] uppercase px-3 py-1.5 rounded-sm border border-ink/25 text-ink/60 hover:border-ink hover:text-ink"
+          >
+            Bandas pra conhecer
+          </a>
+        </div>
 
         <div className="flex flex-col sm:flex-row gap-3 mb-4">
           <input
