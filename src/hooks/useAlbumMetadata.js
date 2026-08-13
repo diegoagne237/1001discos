@@ -9,14 +9,29 @@ export function useAlbumMetadata() {
 
   const reload = useCallback(async () => {
     setLoading(true)
-    // .range() é necessário: por padrão o Supabase corta em 1000 linhas, e como temos 1001
-    // discos, isso estava fazendo exatamente 1 disco sumir aleatoriamente da lista.
-    const { data, error } = await supabase.from('album_metadata').select('*').range(0, 1999)
+    // busca em lotes de 1000 — o Supabase tem um limite máximo de linhas por chamada
+    // configurado no servidor (Settings > API > Max Rows), então pedir um range maior no
+    // código sozinho não bastava. Isso aqui funciona não importa qual seja esse limite.
+    let all = []
+    let from = 0
+    const pageSize = 1000
+    let error = null
+
+    while (true) {
+      const res = await supabase.from('album_metadata').select('*').range(from, from + pageSize - 1)
+      if (res.error) {
+        error = res.error
+        break
+      }
+      all = all.concat(res.data)
+      if (res.data.length < pageSize) break
+      from += pageSize
+    }
     if (error) {
       console.error('Erro ao carregar metadados do Spotify:', error.message)
     } else {
       const map = {}
-      for (const row of data) map[row.album_id] = row
+      for (const row of all) map[row.album_id] = row
       setMetadata(map)
     }
     setLoading(false)
