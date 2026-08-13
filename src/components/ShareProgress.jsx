@@ -3,15 +3,19 @@ import { toPng } from 'html-to-image'
 
 const DECADES_ORDER = ['1950s', '1960s', '1970s', '1980s', '1990s', '2000s', '2010s', '2020s']
 
-// posições do "leque" de capas — mesma referência visual do mockup aprovado
+const CARD_W = 360
+const CARD_H = 450
+
+// posições do "leque" de capas — valores fixos em px, já que o card agora tem tamanho fixo
+// (não depende mais da largura da tela, então não precisa ser tudo em %)
 const COVER_SLOTS = [
-  { left: '4%', bottom: '14px', size: 76, rotate: -14, z: 3 },
-  { left: '21%', bottom: '38px', size: 76, rotate: 9, z: 4 },
-  { left: '38%', bottom: '8px', size: 76, rotate: -7, z: 5 },
-  { left: '55%', bottom: '32px', size: 76, rotate: 13, z: 4 },
-  { left: '72%', bottom: '4px', size: 76, rotate: -11, z: 3 },
-  { left: '-6%', bottom: '54px', size: 62, rotate: 17, z: 2 },
-  { left: '87%', bottom: '46px', size: 62, rotate: -19, z: 2 },
+  { left: 12, bottom: 10, size: 78, rotate: -14, z: 3 },
+  { left: 82, bottom: 34, size: 78, rotate: 9, z: 4 },
+  { left: 152, bottom: 4, size: 78, rotate: -7, z: 5 },
+  { left: 222, bottom: 30, size: 78, rotate: 13, z: 4 },
+  { left: 288, bottom: 2, size: 78, rotate: -11, z: 3 },
+  { left: -22, bottom: 52, size: 64, rotate: 17, z: 2 },
+  { left: 350, bottom: 46, size: 64, rotate: -19, z: 2 },
 ]
 
 function shuffle(arr) {
@@ -78,76 +82,77 @@ export default function ShareProgress({ albums, listenedIds, favorites, onClose 
           </button>
         </div>
 
-        {/* card que vira imagem */}
-        <div
-          ref={cardRef}
-          className="bg-ink text-paper rounded-sm p-8 relative overflow-hidden"
-          style={{ aspectRatio: '4 / 5' }}
-        >
-          <div className="absolute -right-10 -top-10 w-48 h-48 rounded-full border-4 border-mustard/20" />
+        {/* card que vira imagem — tamanho fixo em px, igual em qualquer tela */}
+        <div className="mx-auto overflow-x-auto">
+          <div
+            ref={cardRef}
+            className="bg-ink text-paper rounded-sm relative overflow-hidden shrink-0"
+            style={{ width: CARD_W, height: CARD_H, padding: 28 }}
+          >
+            <div className="absolute -right-10 -top-10 w-48 h-48 rounded-full border-4 border-mustard/20" />
 
-          <p className="font-mono text-mustard text-[10px] tracking-[0.25em] uppercase mb-1">1001 discos</p>
-          <p className="font-display text-sm uppercase text-paper/70 mb-8">
-            Para se ouvir antes de morrer
-          </p>
+            <p className="font-mono text-mustard text-[10px] tracking-[0.25em] uppercase mb-1">1001 discos</p>
+            <p className="font-display text-sm uppercase text-paper/70 mb-1">
+              Para se ouvir antes de morrer
+            </p>
+            <p className="font-mono text-[8px] text-paper/25 uppercase tracking-wide mb-6">
+              baseado em "1001 Albums You Must Hear Before You Die"
+            </p>
 
-          <p className="font-display text-7xl leading-none">{listened}</p>
-          <p className="font-mono text-paper/50 text-sm mb-6">de {total} discos ouvidos</p>
+            <p className="font-display text-7xl leading-none">{listened}</p>
+            <p className="font-mono text-paper/50 text-sm mb-6">de {total} discos ouvidos</p>
 
-          <div className="h-2 bg-paper/15 rounded-full overflow-hidden mb-1">
-            <div className="h-full bg-mustard" style={{ width: `${pct}%` }} />
-          </div>
-          <p className="font-mono text-xs text-paper/60 mb-8">{pct}% da lista completa</p>
+            <div className="h-2 bg-paper/15 rounded-full overflow-hidden mb-1">
+              <div className="h-full bg-mustard" style={{ width: `${pct}%` }} />
+            </div>
+            <p className="font-mono text-xs text-paper/60 mb-8">{pct}% da lista completa</p>
 
-          <div className="flex gap-6 relative z-10">
-            {topDecade && (
+            <div className="flex gap-6 relative z-10">
+              {topDecade && (
+                <div>
+                  <p className="font-display text-2xl">{topDecade.heard}</p>
+                  <p className="font-mono text-[10px] text-paper/50 uppercase">discos dos {topDecade.decade}</p>
+                </div>
+              )}
               <div>
-                <p className="font-display text-2xl">{topDecade.heard}</p>
-                <p className="font-mono text-[10px] text-paper/50 uppercase">discos dos {topDecade.decade}</p>
+                <p className="font-display text-2xl">{favoriteCount}</p>
+                <p className="font-mono text-[10px] text-paper/50 uppercase">favoritos</p>
+              </div>
+            </div>
+
+            {/* leque de capas dos discos já ouvidos */}
+            {randomCovers.length > 0 && (
+              <div className="absolute left-0 right-0 bottom-0 pointer-events-none" style={{ height: 150 }}>
+                {randomCovers.map((album, i) => {
+                  const slot = COVER_SLOTS[i]
+                  return (
+                    <img
+                      key={album.id}
+                      src={album.coverUrl}
+                      alt=""
+                      crossOrigin="anonymous"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none'
+                      }}
+                      className="absolute rounded-sm object-cover"
+                      style={{
+                        left: slot.left,
+                        bottom: slot.bottom,
+                        width: slot.size,
+                        height: slot.size,
+                        transform: `rotate(${slot.rotate}deg)`,
+                        zIndex: slot.z,
+                      }}
+                    />
+                  )
+                })}
+                <div
+                  className="absolute inset-0"
+                  style={{ background: 'linear-gradient(to top, #1B1710 0%, rgba(27,23,16,0) 55%)' }}
+                />
               </div>
             )}
-            <div>
-              <p className="font-display text-2xl">{favoriteCount}</p>
-              <p className="font-mono text-[10px] text-paper/50 uppercase">favoritos</p>
-            </div>
           </div>
-
-          {/* leque de capas dos discos já ouvidos */}
-          {randomCovers.length > 0 && (
-            <div className="absolute inset-x-0 bottom-0 h-40 pointer-events-none">
-              {randomCovers.map((album, i) => {
-                const slot = COVER_SLOTS[i]
-                return (
-                  <img
-                    key={album.id}
-                    src={album.coverUrl}
-                    alt=""
-                    crossOrigin="anonymous"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none'
-                    }}
-                    className="absolute rounded-sm shadow-none object-cover"
-                    style={{
-                      left: slot.left,
-                      bottom: slot.bottom,
-                      width: slot.size,
-                      height: slot.size,
-                      transform: `rotate(${slot.rotate}deg)`,
-                      zIndex: slot.z,
-                    }}
-                  />
-                )
-              })}
-              <div
-                className="absolute inset-0"
-                style={{ background: 'linear-gradient(to top, #1B1710 0%, rgba(27,23,16,0) 60%)' }}
-              />
-            </div>
-          )}
-
-          <p className="absolute bottom-6 left-8 right-8 font-mono text-[9px] text-paper/30 uppercase tracking-wide z-10">
-            baseado em "1001 Albums You Must Hear Before You Die"
-          </p>
         </div>
 
         <div className="flex gap-2 mt-4">
