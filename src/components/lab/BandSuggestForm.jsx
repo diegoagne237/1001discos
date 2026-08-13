@@ -1,54 +1,16 @@
 import { useState } from 'react'
-import {
-  searchArtist,
-  searchThisIsPlaylist,
-  fetchBandBio,
-  extractPlaylistId,
-  getPlaylist,
-  getArtist,
-} from '../../lib/spotifyPublicSearch'
+import { searchArtist, searchThisIsPlaylist, fetchBandBio } from '../../lib/spotifyPublicSearch'
 
 export default function BandSuggestForm({ others, onAdd }) {
-  const [mode, setMode] = useState('playlist') // 'playlist' | 'name'
-  const [playlistLink, setPlaylistLink] = useState('')
   const [query, setQuery] = useState('')
   const [searching, setSearching] = useState(false)
   const [error, setError] = useState('')
-  const [preview, setPreview] = useState(null) // { artist, playlistUrl, playlistName, bio }
+  const [preview, setPreview] = useState(null) // { artist, playlistName, bio }
   const [playlistUrlOverride, setPlaylistUrlOverride] = useState('')
   const [toUserId, setToUserId] = useState(others[0]?.user_id || '')
   const [sending, setSending] = useState(false)
 
-  const handlePlaylistLookup = async (e) => {
-    e.preventDefault()
-    if (!playlistLink.trim()) return
-    setSearching(true)
-    setError('')
-    setPreview(null)
-
-    try {
-      const playlistId = extractPlaylistId(playlistLink.trim())
-      if (!playlistId) {
-        throw new Error('Não reconheci esse link — confere se é um link de playlist do Spotify.')
-      }
-      const playlist = await getPlaylist(playlistId)
-      const firstTrackWithArtist = playlist.tracks?.items?.find((it) => it.track?.artists?.length)
-      const primaryArtistRef = firstTrackWithArtist?.track?.artists?.[0]
-      if (!primaryArtistRef) {
-        throw new Error('Não consegui identificar a banda a partir dessa playlist.')
-      }
-      const artist = await getArtist(primaryArtistRef.id)
-      const bio = await fetchBandBio(artist.name)
-      setPreview({ artist, playlistName: playlist.name, bio })
-      setPlaylistUrlOverride(playlistLink.trim())
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setSearching(false)
-    }
-  }
-
-  const handleNameSearch = async (e) => {
+  const handleSearch = async (e) => {
     e.preventDefault()
     if (!query.trim()) return
     setSearching(true)
@@ -86,7 +48,6 @@ export default function BandSuggestForm({ others, onAdd }) {
         bio: preview.bio || null,
         playlist_url: playlistUrlOverride || null,
       })
-      setPlaylistLink('')
       setQuery('')
       setPreview(null)
       setPlaylistUrlOverride('')
@@ -101,56 +62,22 @@ export default function BandSuggestForm({ others, onAdd }) {
     <div className="bg-paperDark border border-ink/10 rounded-sm p-5">
       <h2 className="font-display text-lg uppercase mb-4">Sugerir uma banda</h2>
 
-      <div className="flex gap-1 mb-4 font-mono text-[10px] uppercase">
+      <form onSubmit={handleSearch} className="flex gap-2 mb-4">
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Nome da banda"
+          className="flex-1 bg-paper border border-ink/20 rounded-sm px-3 py-2 font-body text-sm focus:outline-none focus:border-burgundy"
+        />
         <button
-          onClick={() => setMode('playlist')}
-          className={`px-3 py-1.5 rounded-sm ${mode === 'playlist' ? 'bg-ink text-paper' : 'text-ink/50 bg-paper'}`}
+          type="submit"
+          disabled={searching}
+          className="font-mono text-xs uppercase px-4 py-2 rounded-sm bg-ink text-paper disabled:opacity-50"
         >
-          Colar link da playlist
+          {searching ? 'Buscando...' : 'Buscar'}
         </button>
-        <button
-          onClick={() => setMode('name')}
-          className={`px-3 py-1.5 rounded-sm ${mode === 'name' ? 'bg-ink text-paper' : 'text-ink/50 bg-paper'}`}
-        >
-          Buscar pelo nome
-        </button>
-      </div>
-
-      {mode === 'playlist' ? (
-        <form onSubmit={handlePlaylistLookup} className="flex gap-2 mb-4">
-          <input
-            type="url"
-            value={playlistLink}
-            onChange={(e) => setPlaylistLink(e.target.value)}
-            placeholder="Cola o link da playlist do Spotify (ex: This Is a Banda)"
-            className="flex-1 bg-paper border border-ink/20 rounded-sm px-3 py-2 font-mono text-xs focus:outline-none focus:border-burgundy"
-          />
-          <button
-            type="submit"
-            disabled={searching}
-            className="font-mono text-xs uppercase px-4 py-2 rounded-sm bg-ink text-paper disabled:opacity-50 shrink-0"
-          >
-            {searching ? 'Buscando...' : 'Buscar info'}
-          </button>
-        </form>
-      ) : (
-        <form onSubmit={handleNameSearch} className="flex gap-2 mb-4">
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Nome da banda"
-            className="flex-1 bg-paper border border-ink/20 rounded-sm px-3 py-2 font-body text-sm focus:outline-none focus:border-burgundy"
-          />
-          <button
-            type="submit"
-            disabled={searching}
-            className="font-mono text-xs uppercase px-4 py-2 rounded-sm bg-ink text-paper disabled:opacity-50 shrink-0"
-          >
-            {searching ? 'Buscando...' : 'Buscar'}
-          </button>
-        </form>
-      )}
+      </form>
 
       {error && <p className="font-body text-xs text-burgundy mb-3">{error}</p>}
 
@@ -183,18 +110,15 @@ export default function BandSuggestForm({ others, onAdd }) {
             <p className="font-body text-xs text-ink/60 leading-relaxed line-clamp-4">{preview.bio}</p>
           )}
 
-          <div>
-            <label className="font-mono text-[10px] uppercase text-ink/50 block mb-1">
-              Link da playlist{preview.playlistName ? ` ("${preview.playlistName}")` : ''}
-            </label>
-            <input
-              type="url"
-              value={playlistUrlOverride}
-              onChange={(e) => setPlaylistUrlOverride(e.target.value)}
-              placeholder="Cola o link da playlist do Spotify"
-              className="w-full bg-paper border border-ink/20 rounded-sm px-3 py-2 font-mono text-xs focus:outline-none focus:border-burgundy"
-            />
-          </div>
+          {playlistUrlOverride ? (
+            <p className="font-mono text-[11px] text-ink/50">
+              Playlist encontrada: "{preview.playlistName}"
+            </p>
+          ) : (
+            <p className="font-mono text-[11px] text-ink/40">
+              Não achei uma playlist "This Is" pra essa banda — vai só com o link do perfil no Spotify.
+            </p>
+          )}
 
           {others.length > 1 && (
             <div>

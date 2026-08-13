@@ -9,6 +9,7 @@ import AuthModal from './components/AuthModal'
 import DashboardStats from './components/DashboardStats'
 import DecadeSection from './components/DecadeSection'
 import Randomizer from './components/Randomizer'
+import AlbumSearch from './components/AlbumSearch'
 import SyncSpotify from './components/SyncSpotify'
 import SyncCovers from './components/SyncCovers'
 import CoverEditor from './components/CoverEditor'
@@ -247,22 +248,6 @@ export default function App() {
                 ?
               </button>
             )}
-            {hasLabAccess && (
-              <a
-                href="/?lab=1"
-                className="font-mono text-[11px] uppercase text-ink/50 hover:text-burgundy shrink-0"
-              >
-                Bandas pra conhecer
-              </a>
-            )}
-            {isAdmin && (
-              <a
-                href="/?admin=1"
-                className="font-mono text-[11px] uppercase text-ink/50 hover:text-burgundy shrink-0"
-              >
-                Admin
-              </a>
-            )}
             {user ? (
               <button
                 onClick={signOut}
@@ -281,6 +266,29 @@ export default function App() {
             )}
           </div>
         </div>
+
+        {(hasLabAccess || isAdmin) && (
+          <div className="border-t border-ink/10 bg-paperDark">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 py-1.5 flex items-center gap-4">
+              {hasLabAccess && (
+                <a
+                  href="/?lab=1"
+                  className="font-mono text-[10px] uppercase text-ink/50 hover:text-burgundy"
+                >
+                  Bandas pra conhecer
+                </a>
+              )}
+              {isAdmin && (
+                <a
+                  href="/?admin=1"
+                  className="font-mono text-[10px] uppercase text-ink/50 hover:text-burgundy"
+                >
+                  Admin
+                </a>
+              )}
+            </div>
+          </div>
+        )}
 
         {!user && (
           <div className="bg-mustard/25 border-t border-mustard/40">
@@ -302,6 +310,17 @@ export default function App() {
         />
 
         <Randomizer albums={albums} isListened={isListened} onToggle={guardedToggle} />
+
+        <AlbumSearch
+          albums={albums}
+          isListened={isListened}
+          onToggle={guardedToggle}
+          getRating={getRating}
+          onRate={guardedSetRating}
+          isFavorite={isFavorite}
+          onOpenAlbum={setSelectedAlbum}
+          getComment={getComment}
+        />
 
         <div className="flex flex-col gap-14">
           {decadeGroups.map(([decade, decadeAlbums], index) => (

@@ -80,51 +80,58 @@ export default function DecadeSection({
         )}
       </div>
 
-      {open && (
-        <div className="border-t-2 border-mustard-dark pt-6 pb-4">
-          {filteredAlbums.length === 0 ? (
-            <p className="font-mono text-sm text-ink/40 py-6 text-center">
-              {filterMode === 'unheard'
-                ? 'Você já ouviu tudo dessa década. 🎉'
-                : 'Nenhum disco marcado como ouvido ainda nessa década.'}
-            </p>
-          ) : (
-            <>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                {visibleAlbums.map((album) => (
-                  <AlbumCard
-                    key={album.id}
-                    album={album}
-                    isListened={isListened}
-                    onToggle={onToggle}
-                    rating={getRating ? getRating(album.id) : 0}
-                    onRate={onRate}
-                    favorite={isFavorite ? isFavorite(album.id) : false}
-                    onOpen={onOpenAlbum}
-                  />
-                ))}
-              </div>
-
-              {hasMore && (
-                <div className="flex items-center justify-center gap-3 mt-6">
-                  <button
-                    onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
-                    className="font-mono text-[11px] uppercase tracking-wide px-4 py-2 rounded-sm border border-ink/25 text-ink/70 hover:border-ink hover:text-ink transition-colors"
-                  >
-                    Ver mais ({filteredAlbums.length - visibleCount} restantes)
-                  </button>
-                  <button
-                    onClick={() => setVisibleCount(filteredAlbums.length)}
-                    className="font-mono text-[11px] uppercase tracking-wide px-4 py-2 rounded-sm text-ink/40 hover:text-burgundy transition-colors"
-                  >
-                    Ver tudo
-                  </button>
+      {/* essa linha fica visível sempre, recolhido ou não */}
+      <div className="border-t-2 border-mustard-dark">
+        {!open ? (
+          <p className="font-mono text-[10px] text-ink/35 uppercase tracking-wide py-2">
+            {heardCount} ouvidos · {albums.length - heardCount} não ouvidos
+          </p>
+        ) : (
+          <div className="pt-6 pb-4">
+            {filteredAlbums.length === 0 ? (
+              <p className="font-mono text-sm text-ink/40 py-6 text-center">
+                {filterMode === 'unheard'
+                  ? 'Você já ouviu tudo dessa década. 🎉'
+                  : 'Nenhum disco marcado como ouvido ainda nessa década.'}
+              </p>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {visibleAlbums.map((album) => (
+                    <AlbumCard
+                      key={album.id}
+                      album={album}
+                      isListened={isListened}
+                      onToggle={onToggle}
+                      rating={getRating ? getRating(album.id) : 0}
+                      onRate={onRate}
+                      favorite={isFavorite ? isFavorite(album.id) : false}
+                      onOpen={onOpenAlbum}
+                    />
+                  ))}
                 </div>
-              )}
-            </>
-          )}
-        </div>
-      )}
+
+                {hasMore && (
+                  <div className="flex items-center justify-center gap-3 mt-6">
+                    <button
+                      onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+                      className="font-mono text-[11px] uppercase tracking-wide px-4 py-2 rounded-sm border border-ink/25 text-ink/70 hover:border-ink hover:text-ink transition-colors"
+                    >
+                      Ver mais ({filteredAlbums.length - visibleCount} restantes)
+                    </button>
+                    <button
+                      onClick={() => setVisibleCount(filteredAlbums.length)}
+                      className="font-mono text-[11px] uppercase tracking-wide px-4 py-2 rounded-sm text-ink/40 hover:text-burgundy transition-colors"
+                    >
+                      Ver tudo
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+      </div>
     </section>
   )
 }
