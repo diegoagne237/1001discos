@@ -247,6 +247,14 @@ export default function App() {
                 ?
               </button>
             )}
+            {hasLabAccess && (
+              <a
+                href="/?lab=1"
+                className="font-mono text-[11px] uppercase text-ink/50 hover:text-burgundy shrink-0"
+              >
+                Bandas pra conhecer
+              </a>
+            )}
             {isAdmin && (
               <a
                 href="/?admin=1"

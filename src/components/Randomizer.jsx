@@ -85,10 +85,14 @@ export default function Randomizer({ albums, isListened, onToggle }) {
 
       {!spinning && result && (
         <div className="mt-6 bg-paper text-ink rounded-sm p-5 flex flex-col sm:flex-row sm:items-center gap-4">
-          <div className="w-20 h-20 bg-ink rounded-sm flex items-center justify-center shrink-0">
-            <span className="font-display text-paper/80 text-[10px] text-center uppercase px-1 leading-tight">
-              {result.title}
-            </span>
+          <div className="w-20 h-20 bg-ink rounded-sm overflow-hidden flex items-center justify-center shrink-0">
+            {result.coverUrl ? (
+              <img src={result.coverUrl} alt={`Capa de ${result.title}`} className="w-full h-full object-cover" />
+            ) : (
+              <span className="font-display text-paper/80 text-[10px] text-center uppercase px-1 leading-tight">
+                {result.title}
+              </span>
+            )}
           </div>
           <div className="flex-1">
             <p className="font-display text-xl uppercase leading-tight">{result.title}</p>
