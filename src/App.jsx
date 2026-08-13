@@ -302,14 +302,16 @@ export default function App() {
         )}
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 flex flex-col gap-12">
-        <DashboardStats
-          listenedIds={listenedIds}
-          albums={albums}
-          onShare={() => (user ? setShowShare(true) : setAuthModalReason('Cria uma conta pra acompanhar e compartilhar seu progresso'))}
-        />
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 flex flex-col gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <DashboardStats
+            listenedIds={listenedIds}
+            albums={albums}
+            onShare={() => (user ? setShowShare(true) : setAuthModalReason('Cria uma conta pra acompanhar e compartilhar seu progresso'))}
+          />
 
-        <Randomizer albums={albums} isListened={isListened} onToggle={guardedToggle} />
+          <Randomizer albums={albums} isListened={isListened} onToggle={guardedToggle} />
+        </div>
 
         <AlbumSearch
           albums={albums}
