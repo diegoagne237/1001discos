@@ -60,10 +60,25 @@ function AdminAlbumRow({ album, onSave }) {
       </div>
 
       <div className="min-w-0 sm:w-44 shrink-0">
-        <p className="font-display text-sm uppercase leading-tight truncate">{album.title}</p>
-        <p className="font-body text-xs text-ink/60 truncate">
-          {album.artist} · {album.year}
-        </p>
+        <div className="flex items-start gap-1.5">
+          <div className="min-w-0">
+            <p className="font-display text-sm uppercase leading-tight truncate">{album.title}</p>
+            <p className="font-body text-xs text-ink/60 truncate">
+              {album.artist} · {album.year}
+            </p>
+          </div>
+          <a
+            href={`https://www.google.com/search?q=${encodeURIComponent(
+              `${album.title.toUpperCase()} ${album.artist} · ${album.year} spotify`
+            )}&udm=2`}
+            target="_blank"
+            rel="noreferrer"
+            title="Buscar capa no Google Imagens"
+            className="shrink-0 w-5 h-5 rounded-full border border-ink/25 text-ink/40 hover:border-burgundy hover:text-burgundy text-[10px] flex items-center justify-center mt-0.5"
+          >
+            🔍
+          </a>
+        </div>
       </div>
 
       <input
