@@ -247,6 +247,14 @@ export default function App() {
                 ?
               </button>
             )}
+            {isAdmin && (
+              <a
+                href="/?admin=1"
+                className="font-mono text-[11px] uppercase text-ink/50 hover:text-burgundy shrink-0"
+              >
+                Admin
+              </a>
+            )}
             {user ? (
               <button
                 onClick={signOut}
