@@ -128,10 +128,15 @@ function AdminAlbumRow({ album, onSave }) {
 }
 
 export default function AdminCatalog() {
-  const { metadata, reload } = useAlbumMetadata()
+  const { metadata, loading, reload } = useAlbumMetadata()
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('all')
   const [page, setPage] = useState(1)
+  const [initialized, setInitialized] = useState(false)
+
+  useEffect(() => {
+    if (!loading) setInitialized(true)
+  }, [loading])
 
   const albums = useMemo(() => mergeAlbumsWithMetadata(staticAlbums, metadata), [metadata])
 
@@ -163,6 +168,14 @@ export default function AdminCatalog() {
     }),
     [albums]
   )
+
+  if (!initialized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="font-mono text-sm text-ink/50 uppercase tracking-wide">Carregando catálogo...</p>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-paper px-4 py-8">
