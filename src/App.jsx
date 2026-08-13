@@ -4,12 +4,15 @@ import { useAuth } from './hooks/useAuth'
 import { useListened } from './hooks/useListened'
 import { useAlbumMetadata, mergeAlbumsWithMetadata } from './hooks/useAlbumMetadata'
 import { useHasAccess } from './hooks/useAccessControl'
+import { useIsAdmin } from './hooks/useAccessControl'
 import AuthModal from './components/AuthModal'
 import DashboardStats from './components/DashboardStats'
 import DecadeSection from './components/DecadeSection'
 import Randomizer from './components/Randomizer'
 import SyncSpotify from './components/SyncSpotify'
 import SyncCovers from './components/SyncCovers'
+import CoverEditor from './components/CoverEditor'
+import AdminCatalog from './components/AdminCatalog'
 import Lab from './components/Lab'
 import BackToTop from './components/BackToTop'
 import AlbumModal from './components/AlbumModal'
@@ -32,6 +35,7 @@ export default function App() {
   } = useListened(user?.id)
   const { metadata } = useAlbumMetadata()
   const { hasAccess: hasLabAccess, loading: labAccessLoading } = useHasAccess(user?.id)
+  const { isAdmin, loading: adminLoading } = useIsAdmin(user?.id)
 
   const [selectedAlbum, setSelectedAlbum] = useState(null)
   const [showOnboarding, setShowOnboarding] = useState(() => user && !hasSeenOnboarding())
@@ -42,6 +46,11 @@ export default function App() {
   const isSyncPage = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('sync')
   // /?covers=1 abre a sincronização de capas via iTunes (não precisa de login nem chave)
   const isCoversPage = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('covers')
+  // /?covers-edit=1 abre a edição manual de capas que ficaram sem resolver
+  const isCoverEditPage =
+    typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('covers-edit')
+  // /?admin=1 abre o painel de gerenciamento do catálogo — só pra quem está marcado como admin
+  const isAdminPage = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('admin')
   // /?lab=1 abre a área escondida, liberada só pra quem está na tabela allowed_users
   const isLabPage = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('lab')
 
@@ -107,6 +116,66 @@ export default function App() {
 
   if (isCoversPage) {
     return <SyncCovers />
+  }
+
+  if (isCoverEditPage) {
+    if (!user) {
+      return (
+        <div className="min-h-screen flex items-center justify-center px-4">
+          <div className="text-center">
+            <p className="font-display text-xl uppercase mb-3">Precisa estar logado</p>
+            <button
+              onClick={() => setAuthModalReason('Entra pra editar as capas')}
+              className="font-mono text-xs uppercase px-4 py-2 rounded-sm bg-burgundy text-paper"
+            >
+              Entrar
+            </button>
+          </div>
+          {authModalReason !== null && (
+            <AuthModal reason={authModalReason || null} onClose={() => setAuthModalReason(null)} />
+          )}
+        </div>
+      )
+    }
+    return <CoverEditor />
+  }
+
+  if (isAdminPage) {
+    if (!user) {
+      return (
+        <div className="min-h-screen flex items-center justify-center px-4">
+          <div className="text-center">
+            <p className="font-display text-xl uppercase mb-3">Precisa estar logado</p>
+            <button
+              onClick={() => setAuthModalReason('Entra pra acessar o painel')}
+              className="font-mono text-xs uppercase px-4 py-2 rounded-sm bg-burgundy text-paper"
+            >
+              Entrar
+            </button>
+          </div>
+          {authModalReason !== null && (
+            <AuthModal reason={authModalReason || null} onClose={() => setAuthModalReason(null)} />
+          )}
+        </div>
+      )
+    }
+    if (adminLoading) {
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <p className="font-mono text-sm text-ink/50 uppercase tracking-wide">Carregando...</p>
+        </div>
+      )
+    }
+    if (!isAdmin) {
+      return (
+        <div className="min-h-screen flex items-center justify-center px-4">
+          <p className="font-mono text-sm text-ink/50 uppercase tracking-wide text-center">
+            Você não tem acesso a essa área.
+          </p>
+        </div>
+      )
+    }
+    return <AdminCatalog />
   }
 
   if (isLabPage) {

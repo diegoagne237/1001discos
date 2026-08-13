@@ -78,3 +78,41 @@ export function useOtherAllowedUsers(currentUserId) {
 
   return { others, loading }
 }
+
+// Checa se o usuário logado é admin (marcado manualmente por você em allowed_users.is_admin).
+// Usa uma função do banco (is_admin_user) pra evitar o mesmo problema de recursão que a
+// política de allowed_users teve.
+export function useIsAdmin(userId) {
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!userId) {
+      setIsAdmin(false)
+      setLoading(false)
+      return
+    }
+
+    let cancelled = false
+    setLoading(true)
+
+    supabase
+      .rpc('is_admin_user', { uid: userId })
+      .then(({ data, error }) => {
+        if (cancelled) return
+        if (error) {
+          console.error('Erro ao checar admin:', error.message)
+          setIsAdmin(false)
+        } else {
+          setIsAdmin(Boolean(data))
+        }
+        setLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [userId])
+
+  return { isAdmin, loading }
+}
